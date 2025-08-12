@@ -20,7 +20,7 @@ export function AppSidebar() {
   const current = location.pathname;
   const { state } = useSidebar();
 
-  const linkClass = ({ isActive }: { isActive: boolean }) =>
+  const linkClass = ({ isActive }) =>
     isActive ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium" : "hover:bg-sidebar-accent/70";
 
   return (
