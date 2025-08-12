@@ -18,7 +18,7 @@ export default function ScgHealthCheck() {
   };
   const remove = (ep) => setEndpoints((prev) => prev.filter((e) => e !== ep));
 
-  const check = (ep?: string) => {
+  const check = (ep) => {
     const list = ep ? [ep] : endpoints;
     list.forEach((e, idx) => {
       setResults((r) => ({ ...r, [e]: "idle" }));
