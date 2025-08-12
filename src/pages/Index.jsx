@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { CheckCircle2, XCircle } from "lucide-react";
 
-const StatusCard = ({ name, status, lastChecked }: { name: string; status: "ok" | "error" | "idle"; lastChecked?: string }) => (
+const StatusCard = ({ name, status, lastChecked }) => (
   <Card className="hover-scale">
     <CardHeader>
       <CardTitle>{name}</CardTitle>
@@ -23,9 +23,9 @@ const StatusCard = ({ name, status, lastChecked }: { name: string; status: "ok" 
 );
 
 const Index = () => {
-  const [tykStatus, setTykStatus] = useState<"ok" | "error" | "idle">("idle");
-  const [scgStatus, setScgStatus] = useState<"ok" | "error" | "idle">("idle");
-  const [lastChecked, setLastChecked] = useState<string | undefined>();
+  const [tykStatus, setTykStatus] = useState("idle");
+  const [scgStatus, setScgStatus] = useState("idle");
+  const [lastChecked, setLastChecked] = useState();
 
   const checkAll = () => {
     setLastChecked(new Date().toLocaleString());

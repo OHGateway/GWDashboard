@@ -12,9 +12,9 @@ export default function ScgTokenIssuer() {
   const [aud, setAud] = useState("");
   const [country, setCountry] = useState("");
   const [token, setToken] = useState("");
-  const [error, setError] = useState<string | undefined>();
+  const [error, setError] = useState();
 
-  const generate = async (e: React.FormEvent) => {
+  const generate = async (e) => {
     e.preventDefault();
     setError(undefined);
     try {
@@ -25,9 +25,9 @@ export default function ScgTokenIssuer() {
         .setIssuer(iss)
         .setAudience(aud)
         .setExpirationTime("2h")
-        .sign(privateKey as any);
+        .sign(privateKey);
       setToken(jwt);
-    } catch (err: any) {
+    } catch (err) {
       setError(err?.message || "키 형식이 올바르지 않습니다.");
     }
   };

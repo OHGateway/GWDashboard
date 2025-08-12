@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Calendar, dateFnsLocalizer, Event } from "react-big-calendar";
+import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { Helmet } from "react-helmet-async";
@@ -9,17 +9,17 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MOCK_DATA } from "@/config";
 
-const locales = {} as any;
+const locales = {};
 const localizer = dateFnsLocalizer({ format, parse, startOfWeek: () => startOfWeek(new Date(), { weekStartsOn: 1 }), getDay, locales });
 
-type TicketEvent = Event & { id: string; status: string; description: string };
+
 
 export default function JiraCalendar() {
-  const [queries, setQueries] = useState<string[]>(["assignee = currentUser()", "reporter = 'John Doe'"]);
+  const [queries, setQueries] = useState(["assignee = currentUser()", "reporter = 'John Doe'"]);
   const [q, setQ] = useState("");
-  const [selected, setSelected] = useState<TicketEvent | null>(null);
+  const [selected, setSelected] = useState(null);
 
-  const events = useMemo<TicketEvent[]>(() => {
+  const events = useMemo(() => {
     return MOCK_DATA.jiraTickets.map((t) => ({
       id: t.id,
       title: `${t.id} · ${t.title}`,
@@ -71,7 +71,7 @@ export default function JiraCalendar() {
                 startAccessor="start"
                 endAccessor="end"
                 style={{ height: 600 }}
-                onSelectEvent={(e) => setSelected(e as TicketEvent)}
+                onSelectEvent={(e) => setSelected(e)}
               />
             </div>
           </CardContent>

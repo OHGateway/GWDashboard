@@ -7,16 +7,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { MOCK_DATA } from "@/config";
 
 export default function ScgHealthCheck() {
-  const [endpoints, setEndpoints] = useState<string[]>(MOCK_DATA.scgHealthEndpoints);
+  const [endpoints, setEndpoints] = useState(MOCK_DATA.scgHealthEndpoints);
   const [newEp, setNewEp] = useState("");
-  const [results, setResults] = useState<Record<string, "ok" | "error" | "idle">>({});
+  const [results, setResults] = useState({});
 
   const add = () => {
     if (!newEp) return;
     setEndpoints((prev) => [...prev, newEp]);
     setNewEp("");
   };
-  const remove = (ep: string) => setEndpoints((prev) => prev.filter((e) => e !== ep));
+  const remove = (ep) => setEndpoints((prev) => prev.filter((e) => e !== ep));
 
   const check = (ep?: string) => {
     const list = ep ? [ep] : endpoints;

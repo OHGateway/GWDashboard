@@ -6,7 +6,7 @@ import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 
 export default function TykHealthCheck() {
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState<"idle" | "ok" | "error">("idle");
+  const [status, setStatus] = useState("idle");
 
   const onCheck = () => {
     setLoading(true);
