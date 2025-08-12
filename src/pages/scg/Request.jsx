@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 
 export default function ScgRequest() {
   const [open, setOpen] = useState(false);
-  const submit = (e: React.FormEvent) => { e.preventDefault(); setOpen(true); };
+  const submit = (e) => { e.preventDefault(); setOpen(true); };
 
   return (
     <>

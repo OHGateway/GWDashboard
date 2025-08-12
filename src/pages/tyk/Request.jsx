@@ -9,7 +9,7 @@ import { useState } from "react";
 
 export default function TykRequest() {
   const [open, setOpen] = useState(false);
-  const submit = (e: React.FormEvent) => {
+  const submit = (e) => {
     e.preventDefault();
     setOpen(true);
   };

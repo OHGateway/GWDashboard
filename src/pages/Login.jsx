@@ -12,10 +12,10 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const { login, error } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation() as any;
-  const from = location.state?.from || "/";
+  const location = useLocation();
+  const from = (location && location.state && location.state.from) ? location.state.from : "/";
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = (e) => {
     e.preventDefault();
     const ok = login(id, password);
     if (ok) {
