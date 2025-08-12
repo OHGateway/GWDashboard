@@ -1,18 +1,10 @@
 import { create } from "zustand";
 
-interface AuthState {
-  isAdmin: boolean;
-  lastLoginAt?: string;
-  error?: string;
-  login: (id: string, password: string) => boolean;
-  logout: () => void;
-}
-
-export const useAuth = create<AuthState>((set) => ({
+export const useAuth = create((set) => ({
   isAdmin: false,
   lastLoginAt: undefined,
   error: undefined,
-  login: (id: string, password: string) => {
+  login: (id, password) => {
     const ok = id === "ccsgateway" && password === "GWAdmin!1";
     if (ok) {
       set({ isAdmin: true, error: undefined, lastLoginAt: new Date().toISOString() });
@@ -23,3 +15,4 @@ export const useAuth = create<AuthState>((set) => ({
   },
   logout: () => set({ isAdmin: false }),
 }));
+

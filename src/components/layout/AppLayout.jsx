@@ -1,4 +1,3 @@
-import { ReactNode } from "react";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { useAuth } from "@/store/auth";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 
-export default function AppLayout({ children }: { children: ReactNode }) {
+export default function AppLayout({ children }) {
   const { isAdmin, logout } = useAuth();
   return (
     <SidebarProvider>
