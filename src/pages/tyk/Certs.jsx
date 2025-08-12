@@ -17,7 +17,7 @@ export default function TykCerts() {
     setCerts((prev) => [{ id: crypto.randomUUID(), commonName: cn, expiresAt: exp, issuer: issuer || "Custom" }, ...prev]);
     setCn(""); setExp(""); setIssuer("");
   };
-  const remove = (id: string) => setCerts((prev) => prev.filter((c) => c.id !== id));
+  const remove = (id) => setCerts((prev) => prev.filter((c) => c.id !== id));
 
   return (
     <>

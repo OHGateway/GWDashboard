@@ -32,7 +32,7 @@ export default function JiraCalendar() {
   }, []);
 
   const add = () => { if (!q) return; setQueries((prev) => [q, ...prev]); setQ(""); };
-  const remove = (idx: number) => setQueries((prev) => prev.filter((_, i) => i !== idx));
+  const remove = (idx) => setQueries((prev) => prev.filter((_, i) => i !== idx));
 
   return (
     <>
@@ -86,7 +86,7 @@ export default function JiraCalendar() {
           <div className="space-y-2 text-sm">
             <div><strong>상태:</strong> {selected?.status}</div>
             <div><strong>설명:</strong> {selected?.description}</div>
-            <div><strong>날짜:</strong> {selected ? format(selected.start as Date, 'yyyy-MM-dd') : ''}</div>
+            <div><strong>날짜:</strong> {selected ? format(selected.start, 'yyyy-MM-dd') : ''}</div>
           </div>
         </DialogContent>
       </Dialog>
