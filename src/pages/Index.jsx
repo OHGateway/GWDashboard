@@ -9,15 +9,15 @@ import { CheckCircle2, XCircle } from "lucide-react";
 const StatusCard = ({ name, status, lastChecked }) => (
   <Card className="hover-scale">
     <CardHeader>
-      <CardTitle>{name}</CardTitle>
+      <CardTitle className="text-left">{name}</CardTitle>
     </CardHeader>
-    <CardContent className="flex items-center justify-between">
-      <div className="flex items-center gap-2">
+    <CardContent className="flex flex-col justify-between">
+      <div className="flex items-start gap-2">
         {status === "ok" && <CheckCircle2 className="text-primary" />}
         {status === "error" && <XCircle className="text-destructive" />}
         <span>{status === "idle" ? "대기" : status === "ok" ? "정상" : "오류"}</span>
       </div>
-      <div className="text-sm text-muted-foreground">{lastChecked ? `마지막 확인: ${lastChecked}` : "아직 확인 전"}</div>
+      <div className="text-sm text-muted-foreground text-right mt-2 self-end">{lastChecked ? `마지막 확인: ${lastChecked}` : "아직 확인 전"}</div>
     </CardContent>
   </Card>
 );
@@ -45,22 +45,22 @@ const Index = () => {
         <meta name="description" content="TYK / SCG 상태를 한눈에 확인하고 업무 요청을 바로 처리하세요." />
         <link rel="canonical" href={typeof window !== 'undefined' ? window.location.href : '/'} />
       </Helmet>
-      <div className="grid gap-6">
-        <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="grid md:grid-cols-2 gap-4">
-          <Button asChild size="lg" variant="hero" className="hover-scale">
-            <Link to="/tyk/request">TYK Gateway 업무 요청 바로가기</Link>
-          </Button>
-          <Button asChild size="lg" variant="hero" className="hover-scale">
-            <Link to="/scg/request">Spring Cloud Gateway 업무 요청 바로가기</Link>
-          </Button>
+      <div className="flex gap-6 flex-col md:flex-row items-stretch">
+        <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="flex flex-row gap-4 justify-between">
+        <Button asChild size="lg" variant="hero" className="hover-scale">
+          <Link to="/tyk/request">API Gateway(TYK) 업무요청 바로가기</Link>
+        </Button>
+        <Button asChild size="lg" variant="hero" className="hover-scale">
+          <Link to="/scg/request">MSA API Gateway 업무요청 바로가기</Link>
+        </Button>
         </motion.section>
 
-        <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.3 }} className="grid md:grid-cols-2 gap-4">
-          <StatusCard name="TYK Gateway" status={tykStatus} lastChecked={lastChecked} />
-          <StatusCard name="Spring Cloud Gateway" status={scgStatus} lastChecked={lastChecked} />
+        <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.3 }} className="flex flex-row gap-4 justify-between">
+          <StatusCard name="API Gateway(TYK)" status={tykStatus} lastChecked={lastChecked} />
+          <StatusCard name="MSA API Gateway" status={scgStatus} lastChecked={lastChecked} />
         </motion.section>
 
-        <div className="flex gap-3">
+        <div className="flex gap-3 ml-auto">
           <Button variant="outline" onClick={checkAll}>상태 재확인</Button>
         </div>
       </div>

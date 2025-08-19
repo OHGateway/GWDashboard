@@ -12,20 +12,27 @@ import {
   SidebarTrigger,
   SidebarInset,
 } from "@/components/ui/sidebar";
-import { LayoutGrid, Network, ShieldCheck, Server, KeySquare, CalendarClock } from "lucide-react";
+import { LayoutGrid, Network, HeartPulse, KeySquare, CalendarClock, LogIn, LogOut, ArchiveRestore } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
+import { useAuth } from "@/store/auth";
+import { Link } from "react-router-dom";
 
 export function AppSidebar() {
   const location = useLocation();
   const current = location.pathname;
   const { state } = useSidebar();
+  const { isAdmin, logout } = useAuth();
 
   const linkClass = ({ isActive }) =>
     isActive ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium" : "hover:bg-sidebar-accent/70";
 
   return (
     <Sidebar collapsible={"icon"}>
-      <SidebarContent>
+      <SidebarContent className="flex flex-col h-full">
+        <div className="flex justify-center mt-4">
+          {state === "expanded" && <span className="font-semibold">Gateway 관리 대시보드</span>}
+        </div>
         <SidebarGroup>
           <SidebarGroupLabel>메인</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -43,37 +50,29 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>TYK Gateway</SidebarGroupLabel>
+          <SidebarGroupLabel>API GATEWAY(TYK)</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <NavLink to="/tyk/apis" className={linkClass}>
                     <Network className="mr-2 h-4 w-4" />
-                    <span>API 목록</span>
+                    <span>Listen Path 정보</span>
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <NavLink to="/tyk/health-check" className={linkClass}>
-                    <Server className="mr-2 h-4 w-4" />
+                    <HeartPulse className="mr-2 h-4 w-4" />
                     <span>통신 상태</span>
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/tyk/certs" className={linkClass}>
-                    <ShieldCheck className="mr-2 h-4 w-4" />
-                    <span>인증서 관리</span>
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
                   <NavLink to="/tyk/request" className={linkClass}>
-                    <KeySquare className="mr-2 h-4 w-4" />
+                    <ArchiveRestore className="mr-2 h-4 w-4" />
                     <span>업무 요청</span>
                   </NavLink>
                 </SidebarMenuButton>
@@ -83,7 +82,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Spring Cloud Gateway</SidebarGroupLabel>
+          <SidebarGroupLabel>MSA API GATEWAY</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
@@ -97,12 +96,13 @@ export function AppSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <NavLink to="/scg/health-check" className={linkClass}>
-                    <Server className="mr-2 h-4 w-4" />
+                    <HeartPulse className="mr-2 h-4 w-4" />
                     <span>통신 상태</span>
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem>
+              {isAdmin && (
+                <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <NavLink to="/scg/token-issuer" className={linkClass}>
                     <KeySquare className="mr-2 h-4 w-4" />
@@ -110,10 +110,11 @@ export function AppSidebar() {
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              )}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <NavLink to="/scg/request" className={linkClass}>
-                    <KeySquare className="mr-2 h-4 w-4" />
+                    <ArchiveRestore className="mr-2 h-4 w-4" />
                     <span>업무 요청</span>
                   </NavLink>
                 </SidebarMenuButton>
@@ -122,7 +123,8 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
+        {isAdmin && (
+          <SidebarGroup>
           <SidebarGroupLabel>관리자</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -137,6 +139,29 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        )}
+        
+        <div className="flex items-center justify-between border-t p-4 mt-auto">
+            {state === "expanded" && (
+              <div className="flex items-center gap-2">
+              {isAdmin ? (
+                <Button variant="outline" onClick={logout}> 
+                <LogOut className="mr-2 h-4 w-4" /> 
+                <span>로그아웃</span>
+                </Button>
+              ) : (
+                <Button asChild variant="outline">
+                  <Link to="/login">
+                  <LogIn className="mr-2 h-4 w-4" /> 
+                  <span>관리자 로그인</span>
+                  </Link>
+                </Button>
+              )}
+            </div>
+            )}
+            <SidebarTrigger />  
+        </div>
+        
       </SidebarContent>
     </Sidebar>
   );
