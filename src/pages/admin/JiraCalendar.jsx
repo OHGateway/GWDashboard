@@ -1,3 +1,15 @@
+// 요일 헤더 커스텀 렌더러 (JSX)
+function renderDayHeader(arg) {
+  const day = arg.date.getDay();
+  let color = 'text-slate-700';
+  if (day === 0) color = 'text-red-500 font-bold';
+  if (day === 6) color = 'text-blue-600 font-bold';
+  return (
+    <div className={`rounded-lg px-2 py-1 text-base md:text-lg font-semibold bg-slate-100 ${color}`} style={{ letterSpacing: '0.02em' }}>
+      {arg.text}
+    </div>
+  );
+}
 import { useMemo, useState } from "react";
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -5,6 +17,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MOCK_DATA } from "@/config";
+import { createElement } from "react";
 
 
 
@@ -16,16 +29,15 @@ export default function JiraCalendar() {
     MOCK_DATA.jiraTickets.map((t) => ({
       id: t.id,
       title: `${t.id} · ${t.title}`,
-      date: t.duedate,
+      start: t.duedate, // FullCalendar는 start로 인식
       extendedProps: {
         status: t.status,
         description: t.description,
       },
       allDay: true,
-      backgroundColor:
-        t.status === 'Done' ? '#a7f3d0' : t.status === 'In Progress' ? '#fef08a' : '#fca5a5',
-      borderColor:
-        t.status === 'Done' ? '#34d399' : t.status === 'In Progress' ? '#facc15' : '#f87171',
+      backgroundColor: '#2563eb',
+      borderColor: '#2563eb',
+      textColor: '#fff',
     })),
     []
   );
@@ -66,8 +78,10 @@ export default function JiraCalendar() {
             expandRows={true}
             dayMaxEventRows={3}
             eventDisplay="block"
+            dayHeaderContent={renderDayHeader}
           />
         </div>
+
       </div>
 
       <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
