@@ -58,9 +58,8 @@ export default function JiraCalendar() {
       <div className="w-full max-w-5xl shadow-xl rounded-2xl bg-white/90 p-6 mb-8 border border-slate-200">
         <h2 className="text-2xl font-bold mb-2 text-slate-800 flex items-center gap-2">
           <svg width="28" height="28" fill="none" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#2563eb"/><path d="M7.5 8.5h9m-9 3h6m-6 3h3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>
-          Jira 이슈 캘린더
+          GATEWAY Jira 캘린더
         </h2>
-        <p className="text-slate-500 mb-4">Gateway 일정을 확인하세요.</p>
         <div className="bg-white rounded-xl shadow p-2 md:p-4">
           <FullCalendar
             plugins={[dayGridPlugin, interactionPlugin]}
@@ -69,10 +68,16 @@ export default function JiraCalendar() {
             eventClick={handleEventClick}
             locale="ko"
             headerToolbar={{
-              left: 'prev,next today',
+              left: 'prev',
               center: 'title',
-              right: 'dayGridMonth,dayGridWeek,dayGridDay'
+              right: 'next'
             }}
+            footerToolbar={{
+              left: '',
+              center: '',
+              right: 'today dayGridMonth,dayGridWeek,dayGridDay'
+            }}
+            titleFormat={{ year: 'numeric', month: 'long' }}
             height="auto"
             contentHeight="auto"
             aspectRatio={1.7}
