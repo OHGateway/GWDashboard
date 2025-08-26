@@ -35,6 +35,26 @@ export const MOCK_DATA = {
   ],
   jiraTickets: [
     {
+      id: "GW-313",
+      title: "delete new route for analytics service23",
+      assignee: "ccsgateway",
+      reporter: "lisa Doe",
+      status: "In Progress",
+      duedate: "2025-08-27",
+      description: "Create SCG route for analytics-service with StripPrefix=2",
+      type: "Task",
+    },
+    {
+      id: "GW-123",
+      title: "Add new route for analytics service23",
+      assignee: "ccsgateway",
+      reporter: "jenny Doe",
+      status: "In Progress",
+      duedate: "2025-08-28",
+      description: "Create SCG route for analytics-service with StripPrefix=2",
+      type: "Task",
+    },
+    {
       id: "GW-101",
       title: "Add new route for analytics service",
       assignee: "ccsgateway",
