@@ -1,95 +1,89 @@
 import { useMemo, useState } from "react";
-import { Calendar, dateFnsLocalizer } from "react-big-calendar";
-import { format, parse, startOfWeek, getDay } from "date-fns";
-import "react-big-calendar/lib/css/react-big-calendar.css";
-import { Helmet } from "react-helmet-async";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MOCK_DATA } from "@/config";
-
-const locales = {};
-const localizer = dateFnsLocalizer({ format, parse, startOfWeek: () => startOfWeek(new Date(), { weekStartsOn: 1 }), getDay, locales });
 
 
 
 export default function JiraCalendar() {
-  const [queries, setQueries] = useState(["assignee = currentUser()", "reporter = 'John Doe'"]);
-  const [q, setQ] = useState("");
   const [selected, setSelected] = useState(null);
 
-  const events = useMemo(() => {
-    return MOCK_DATA.jiraTickets.map((t) => ({
+  // mock 데이터로 이벤트 생성
+  const events = useMemo(() =>
+    MOCK_DATA.jiraTickets.map((t) => ({
       id: t.id,
       title: `${t.id} · ${t.title}`,
-      start: new Date(t.duedate),
-      end: new Date(t.duedate),
+      date: t.duedate,
+      extendedProps: {
+        status: t.status,
+        description: t.description,
+      },
       allDay: true,
-      status: t.status,
-      description: t.description,
-    }));
-  }, []);
+      backgroundColor:
+        t.status === 'Done' ? '#a7f3d0' : t.status === 'In Progress' ? '#fef08a' : '#fca5a5',
+      borderColor:
+        t.status === 'Done' ? '#34d399' : t.status === 'In Progress' ? '#facc15' : '#f87171',
+    })),
+    []
+  );
 
-  const add = () => { if (!q) return; setQueries((prev) => [q, ...prev]); setQ(""); };
-  const remove = (idx) => setQueries((prev) => prev.filter((_, i) => i !== idx));
+  // FullCalendar event click handler
+  const handleEventClick = (info) => {
+    setSelected({
+      title: info.event.title,
+      status: info.event.extendedProps.status,
+      description: info.event.extendedProps.description,
+      start: info.event.start,
+    });
+  };
 
   return (
-    <>
-      <Helmet>
-        <title>관리자 Jira 캘린더</title>
-        <meta name="description" content="JQL을 추가하고 티켓 일정을 캘린더로 확인하세요." />
-        <link rel="canonical" href={typeof window !== 'undefined' ? window.location.href : '/'} />
-      </Helmet>
-      <div className="grid gap-4">
-        <Card>
-          <CardHeader><CardTitle>JQL 관리</CardTitle></CardHeader>
-          <CardContent className="grid md:grid-cols-3 gap-3">
-            <Input placeholder="예: assignee = currentUser()" value={q} onChange={(e) => setQ(e.target.value)} />
-            <Button onClick={add}>추가</Button>
-            <div className="col-span-1 md:col-span-1" />
-            <div className="md:col-span-3">
-              <ul className="list-disc pl-5 space-y-1">
-                {queries.map((qq, i) => (
-                  <li key={i} className="flex items-center justify-between">
-                    <span>{qq}</span>
-                    <Button size="sm" variant="outline" onClick={() => remove(i)}>삭제</Button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle>캘린더</CardTitle></CardHeader>
-          <CardContent>
-            <div className="bg-card p-2 rounded-md">
-              <Calendar
-                localizer={localizer}
-                events={events}
-                startAccessor="start"
-                endAccessor="end"
-                style={{ height: 600 }}
-                onSelectEvent={(e) => setSelected(e)}
-              />
-            </div>
-          </CardContent>
-        </Card>
+    <div className="flex flex-col items-center min-h-[80vh] py-8 px-2 bg-gradient-to-br from-slate-50 to-slate-200">
+      <div className="w-full max-w-5xl shadow-xl rounded-2xl bg-white/90 p-6 mb-8 border border-slate-200">
+        <h2 className="text-2xl font-bold mb-2 text-slate-800 flex items-center gap-2">
+          <svg width="28" height="28" fill="none" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#2563eb"/><path d="M7.5 8.5h9m-9 3h6m-6 3h3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>
+          Jira 이슈 캘린더
+        </h2>
+        <p className="text-slate-500 mb-4">Gateway 일정을 확인하세요.</p>
+        <div className="bg-white rounded-xl shadow p-2 md:p-4">
+          <FullCalendar
+            plugins={[dayGridPlugin, interactionPlugin]}
+            initialView="dayGridMonth"
+            events={events}
+            eventClick={handleEventClick}
+            locale="ko"
+            headerToolbar={{
+              left: 'prev,next today',
+              center: 'title',
+              right: 'dayGridMonth,dayGridWeek,dayGridDay'
+            }}
+            height="auto"
+            contentHeight="auto"
+            aspectRatio={1.7}
+            expandRows={true}
+            dayMaxEventRows={3}
+            eventDisplay="block"
+          />
+        </div>
       </div>
 
       <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{selected?.title}</DialogTitle>
+            <DialogTitle className="text-lg font-semibold">{selected?.title}</DialogTitle>
           </DialogHeader>
           <div className="space-y-2 text-sm">
-            <div><strong>상태:</strong> {selected?.status}</div>
-            <div><strong>설명:</strong> {selected?.description}</div>
-            <div><strong>날짜:</strong> {selected ? format(selected.start, 'yyyy-MM-dd') : ''}</div>
+            <div><span className="font-semibold">상태:</span> <span className={
+              selected?.status === 'Done' ? 'text-green-600' : selected?.status === 'In Progress' ? 'text-yellow-600' : 'text-red-600'
+            }>{selected?.status}</span></div>
+            <div><span className="font-semibold">설명:</span> {selected?.description}</div>
+            <div><span className="font-semibold">날짜:</span> {selected ? format(selected.start, 'yyyy-MM-dd') : ''}</div>
           </div>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }
