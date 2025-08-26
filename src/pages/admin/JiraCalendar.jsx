@@ -1,14 +1,15 @@
-// 요일 헤더 커스텀 렌더러 (JSX)
-function renderDayHeader(arg) {
+// 요일 헤더 인라인 스타일 적용
+function styleDayHeader(arg) {
   const day = arg.date.getDay();
-  let color = 'text-slate-700';
-  if (day === 0) color = 'text-red-500 font-bold';
-  if (day === 6) color = 'text-blue-600 font-bold';
-  return (
-    <div className={`rounded-lg px-2 py-1 text-base md:text-lg font-semibold bg-slate-100 ${color}`} style={{ letterSpacing: '0.02em' }}>
-      {arg.text}
-    </div>
-  );
+  arg.el.style.letterSpacing = '0.02em';
+  arg.el.style.borderRadius = '0.5rem';
+  arg.el.style.padding = '0.25rem 0.5rem';
+  arg.el.style.fontWeight = '600';
+  arg.el.style.fontSize = '1.125rem';
+  arg.el.style.background = '#f1f5f9'; // slate-100
+  arg.el.style.color = '#334155'; // slate-700 기본
+  if (day === 0) arg.el.style.color = '#ef4444'; // red-500
+  if (day === 6) arg.el.style.color = '#2563eb'; // blue-600
 }
 import { useMemo, useState } from "react";
 import FullCalendar from '@fullcalendar/react';
@@ -17,7 +18,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MOCK_DATA } from "@/config";
-import { createElement } from "react";
+
 
 
 
@@ -78,7 +79,13 @@ export default function JiraCalendar() {
             expandRows={true}
             dayMaxEventRows={3}
             eventDisplay="block"
-            dayHeaderContent={renderDayHeader}
+            dayHeaderClassNames={[]}
+            dayHeaderDidMount={styleDayHeader}
+
+
+// 요일 헤더에 Tailwind 스타일 클래스 적용
+// 반드시 export default function JiraCalendar 바깥에 위치해야 함
+
           />
         </div>
 
