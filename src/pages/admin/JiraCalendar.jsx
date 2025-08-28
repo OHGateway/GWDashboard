@@ -1,3 +1,13 @@
+import { useMemo, useState } from "react";
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import { format } from "date-fns";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { MOCK_DATA } from "@/config";
+
+const bodyData = ``;
+
 // 요일 헤더 인라인 스타일 적용
 function styleDayHeader(arg) {
   const day = arg.date.getDay();
@@ -11,16 +21,34 @@ function styleDayHeader(arg) {
   if (day === 0) arg.el.style.color = '#ef4444'; // red-500
   if (day === 6) arg.el.style.color = '#2563eb'; // blue-600
 }
-import { useMemo, useState } from "react";
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import interactionPlugin from '@fullcalendar/interaction';
-import { format } from "date-fns";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MOCK_DATA } from "@/config";
 
-
-
+// Jira API에서 이슈를 가져오는 함수 (렌더링에는 사용하지 않음)
+async function fetchJiraIssues({ jql, fields, token }) {
+  const url = 'https://company.atlassian.net/rest/api/2/search';
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      "expand": [
+        "names",
+        "schema",
+        "operations"
+      ],
+      "fields": [
+        "summary",
+        "status",
+        "assignee"
+      ],
+      "jql": "project = HSP",
+      "startAt": 0
+    }),
+  });
+  if (!res.ok) throw new Error('Jira API 요청 실패');
+  return res.json();
+}
 
 export default function JiraCalendar() {
   const [selected, setSelected] = useState(null);
@@ -57,7 +85,7 @@ export default function JiraCalendar() {
     <div className="flex flex-col items-center min-h-[80vh] py-8 px-2 bg-gradient-to-br from-slate-50 to-slate-200">
       <div className="w-full max-w-5xl shadow-xl rounded-2xl bg-white/90 p-6 mb-8 border border-slate-200">
         <h2 className="text-2xl font-bold mb-2 text-slate-800 flex items-center gap-2">
-          <svg width="28" height="28" fill="none" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#2563eb"/><path d="M7.5 8.5h9m-9 3h6m-6 3h3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>
+          <svg width="28" height="28" fill="none" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#2563eb" /><path d="M7.5 8.5h9m-9 3h6m-6 3h3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" /></svg>
           GATEWAY Jira 캘린더
         </h2>
         <div className="bg-white rounded-xl shadow p-2 md:p-4">
@@ -86,10 +114,6 @@ export default function JiraCalendar() {
             eventDisplay="block"
             dayHeaderClassNames={[]}
             dayHeaderDidMount={styleDayHeader}
-
-
-// 요일 헤더에 Tailwind 스타일 클래스 적용
-// 반드시 export default function JiraCalendar 바깥에 위치해야 함
 
           />
         </div>
