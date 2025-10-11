@@ -89,6 +89,7 @@ function MessageRow({ children }) {
 
 export default function TykApis() {
   const [q, setQ] = useState("");
+  const [authFilter, setAuthFilter] = useState("all");
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState(null);
@@ -106,8 +107,8 @@ export default function TykApis() {
         // if (!res.ok) throw new Error(`HTTP ${res.status}`);
         // const raw = await res.json();
 
-        
-        const mapped = definitionsData.map((r, i) => ({ // 로컬 파일에서 불러온 데이터 사용
+        const mapped = definitionsData.map((r, i) => ({
+          // 로컬 파일에서 불러온 데이터 사용
           // const mapped = raw.map((r, i) => ({        // 실제 API 사용 시
           id: r?.api_id ?? `row-${i}`,
           name: r?.name ?? "(no name)",
@@ -150,13 +151,24 @@ export default function TykApis() {
   }, []);
 
   const data = useMemo(() => {
+    let filtered = rows;
+    
+    // 토큰 검증 필터
+    if (authFilter !== "all") {
+      filtered = filtered.filter((r) => r.tokenCheck === authFilter);
+    }
+    
+    // 검색어 필터
     const qv = q.trim().toLowerCase();
-    if (!qv) return rows;
-    return rows.filter((r) => {
-      const fields = [r.name, r.listen_path, r.target_url, r.slug];
-      return fields.some((v) => (v || "").toLowerCase().includes(qv));
-    });
-  }, [q, rows]);
+    if (qv) {
+      filtered = filtered.filter((r) => {
+        const fields = [r.name, r.listen_path, r.target_url, r.slug];
+        return fields.some((v) => (v || "").toLowerCase().includes(qv));
+      });
+    }
+    
+    return filtered;
+  }, [q, authFilter, rows]);
 
   const handleRowClick = (api) => {
     setSelectedApi(api);
@@ -184,6 +196,34 @@ export default function TykApis() {
               onChange={(e) => setQ(e.target.value)}
               className="pl-10"
             />
+          </div>
+          
+          {/* Token Filter Buttons */}
+          <div className="flex gap-2 mt-4">
+            <Badge
+              variant="outline"
+              className="cursor-pointer px-3 py-1.5 transition-colors"
+              style={authFilter === "all" ? { backgroundColor: "#eaf0ff", color: "#0167ff", borderColor: "#0167ff" } : {}}
+              onClick={() => setAuthFilter("all")}
+            >
+              전체
+            </Badge>
+            <Badge
+              variant="outline"
+              className="cursor-pointer px-3 py-1.5 transition-colors"
+              style={authFilter === "O" ? { backgroundColor: "#eaf0ff", color: "#0167ff", borderColor: "#0167ff" } : {}}
+              onClick={() => setAuthFilter("O")}
+            >
+              토큰 검증 O
+            </Badge>
+            <Badge
+              variant="outline"
+              className="cursor-pointer px-3 py-1.5 transition-colors"
+              style={authFilter === "X" ? { backgroundColor: "#eaf0ff", color: "#0167ff", borderColor: "#0167ff" } : {}}
+              onClick={() => setAuthFilter("X")}
+            >
+              토큰 검증 X
+            </Badge>
           </div>
         </CardContent>
       </Card>
@@ -233,11 +273,15 @@ export default function TykApis() {
                     >
                       {COLUMNS.map((c) => {
                         let value = api[c.key] ?? "";
-                        
+
                         if (c.key === "brand") {
-                          value = <Badge variant="outline" className="bg-white text-foreground">{api[c.key]}</Badge>;
+                          value = (
+                            <Badge variant="outline" className="bg-white text-foreground">
+                              {api[c.key]}
+                            </Badge>
+                          );
                         }
-                        
+
                         const isTextCell = typeof value === "string";
 
                         return (
