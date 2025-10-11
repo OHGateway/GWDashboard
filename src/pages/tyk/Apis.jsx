@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
-import { Helmet } from "react-helmet-async";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/tmp/input";
+import { Card, CardContent } from "@/components/ui/tmp/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/tmp/table";
+import { Badge } from "@/components/ui/badge";
+import { Search } from "lucide-react";
+import { ApiDetailModal } from "@/pages/tyk/ApiDetailModal";
+import definitionsData from "@/../mock-server/tyk/data/definitions.json"; // 로컬 파일에서 데이터 임포트
 
-// --- 토큰 검증: Keyless면 'X', 아니면 'O' ---
 function toAuth(r) {
   const isKeyless = r?.use_keyless === true;
   return isKeyless ? "X" : "O";
 }
 
-// --- 도메인 → 브랜드 ---
 function toBrand(domain) {
   if (!domain) return "-";
   const d = String(domain).toLowerCase();
@@ -20,8 +21,6 @@ function toBrand(domain) {
   return "-";
 }
 
-
-// --- 레이트 리밋 표기 ---
 function toRateLimit(r) {
   const rate = r?.global_rate_limit?.rate ?? 0;
   const per = r?.global_rate_limit?.per ?? 0;
@@ -29,13 +28,11 @@ function toRateLimit(r) {
   return `${rate} / ${per}s`;
 }
 
-// --- 상태 아이콘 (SVG 원) ---
 function StatusDot({ value }) {
-  // true -> green, false -> red, undefined/null -> yellow
-  const fill = value === true ? "#22c55e" : value === false ? "#ef4444" : "#eab308";
+  const fill = value === true ? "hsl(var(--success))" : value === false ? "hsl(var(--error))" : "hsl(var(--warning))";
   const label = value === true ? "Active" : value === false ? "Inactive" : "Unknown";
   return (
-    <span className="inline-flex items-center justify-center" title={label}>
+    <span className="inline-flex items-center" title={label}>
       <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" className="shrink-0">
         <circle cx="6" cy="6" r="5" fill={fill} />
       </svg>
@@ -44,11 +41,59 @@ function StatusDot({ value }) {
   );
 }
 
+function alignClass(align) {
+  if (align === "center") return "text-center";
+  if (align === "right") return "text-right";
+  return "text-left";
+}
+
+const COLUMNS = [
+  { key: "name", header: "API 명", width: 180, align: "left" },
+  { key: "brand", header: "브랜드", width: 100, align: "center" },
+  {
+    key: "listen_path",
+    header: (
+      <>
+        Listen Path
+        <span className="block text-xs font-normal opacity-70">(App &gt; GW)</span>
+      </>
+    ),
+    width: 260,
+    align: "left",
+  },
+  {
+    key: "target_url",
+    header: (
+      <>
+        Target URL
+        <span className="block text-xs font-normal opacity-70">(GW &gt; Service)</span>
+      </>
+    ),
+    width: 280,
+    align: "left",
+  },
+  { key: "tokenCheck", header: "토큰 검증", width: 80, align: "center" },
+];
+
+const COLSPAN = COLUMNS.length;
+
+function MessageRow({ children }) {
+  return (
+    <TableRow>
+      <TableCell colSpan={COLSPAN} className="py-6 text-center text-sm text-muted-foreground">
+        {children}
+      </TableCell>
+    </TableRow>
+  );
+}
+
 export default function TykApis() {
   const [q, setQ] = useState("");
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState(null);
+  const [selectedApi, setSelectedApi] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -56,21 +101,22 @@ export default function TykApis() {
         setLoading(true);
         setErr(null);
 
-        // 직접 호출 (server.cjs에서 CORS 허용)
-        const res = await fetch("http://localhost:3000/definitions")
+        // 실제 API 통해 데이터 불러옴
+        // const res = await fetch("http://localhost:3000/definitions");
+        // if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        // const raw = await res.json();
 
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const raw = await res.json();
-
-        const mapped = raw.map((r, i) => ({
+        
+        const mapped = definitionsData.map((r, i) => ({ // 로컬 파일에서 불러온 데이터 사용
+          // const mapped = raw.map((r, i) => ({        // 실제 API 사용 시
           id: r?.api_id ?? `row-${i}`,
           name: r?.name ?? "(no name)",
           brand: toBrand(r?.domain),
           listen_path: r?.proxy?.listen_path ?? "",
           target_url: r?.proxy?.target_url ?? "",
-          tokenCheck: toAuth(r),            // 'O' | 'X'
+          tokenCheck: toAuth(r),
           rate_limit: toRateLimit(r),
-          status: null,                     // true | false | undefined
+          status: null,
           slug: r?.slug ?? "",
           __raw: r,
         }));
@@ -81,18 +127,18 @@ export default function TykApis() {
             if (!api.target_url) return { id: api.id, ok: false };
             try {
               const r = await fetch(`/api/health?url=${encodeURIComponent(api.target_url)}`);
-              const json = await r.json(); // { ok, status, reason }
+              const json = await r.json();
               return { id: api.id, ok: !!json.ok };
             } catch {
               return { id: api.id, ok: false };
             }
-          })
+          }),
         ).then((results) => {
           setRows((prev) =>
             prev.map((row) => {
               const hit = results.find((r) => r.id === row.id);
               return hit ? { ...row, status: hit.ok } : row;
-            })
+            }),
           );
         });
       } catch (e) {
@@ -103,8 +149,6 @@ export default function TykApis() {
     })();
   }, []);
 
-
-
   const data = useMemo(() => {
     const qv = q.trim().toLowerCase();
     if (!qv) return rows;
@@ -114,102 +158,113 @@ export default function TykApis() {
     });
   }, [q, rows]);
 
+  const handleRowClick = (api) => {
+    setSelectedApi(api);
+    setModalOpen(true);
+  };
+
   return (
-    <>
-      <Helmet>
-        <title>TYK API 목록 | Listen Path 검색</title>
-        <meta name="description" content="TYK Gateway에 등록된 API를 검색하고 확인하세요." />
-        <link
-          rel="canonical"
-          href={typeof window !== "undefined" ? window.location.href : "/"}
-        />
-      </Helmet>
-
-      <div className="mx-auto w-full max-w-5xl px-4 space-y-4">
-        <div className="space-y-2">
-          <h1 className="text-2xl font-semibold">TYK API 목록</h1>
-          <Input
-            placeholder="이름 / Listen Path / Target URL 검색"
-            className="w-full"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">API Gateway Routes</h1>
+          <p className="text-muted-foreground">View and search API route configurations</p>
         </div>
+      </div>
 
-        <Card className="w-full">
-          <CardContent className="p-6">
-            {loading ? (
-              <div className="min-h-[200px] flex items-center justify-center">
-                불러오는 중…
-              </div>
-            ) : err ? (
-              <div className="min-h-[200px] flex items-center justify-center text-red-600">
-                오류: {err}
-              </div>
-            ) : data.length === 0 ? (
-              <div className="min-h-[200px] flex items-center justify-center">
-                검색 결과가 없습니다.
-              </div>
-            ) : (
-              <div className="w-full overflow-x-auto">
-                <Table className="w-full table-fixed">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-center">
-                        <div className="font-semibold">API 명</div>
-                      </TableHead>
-                      <TableHead className="text-center">
-                        <div className="font-semibold">브랜드</div>
-                      </TableHead>
-                      <TableHead className="text-center">
-                        <div className="font-semibold">Listen Path</div>
-                        <span className="block text-xs font-normal opacity-70">
-                          (App &gt; GW)
-                        </span>
-                      </TableHead>
-                      <TableHead className="text-center">
-                        <div className="font-semibold">Target URL</div>
-                        <span className="block text-xs font-normal opacity-70">
-                          (GW &gt; Service)
-                        </span>
-                      </TableHead>
-                      <TableHead className="text-center">
-                        <div className="font-semibold">토큰 검증</div>
-                      </TableHead>
-                      <TableHead className="text-center">
-                        <div className="font-semibold">Rate Limit</div>
-                      </TableHead>
-                      <TableHead className="text-center">
-                        <div className="font-semibold">상태</div>
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {data.map((api) => (
-                      <TableRow key={api.id}>
-                        <TableCell className="max-w-[240px] truncate" title={api.name}>
-                          {api.name}
-                        </TableCell>
-                        <TableCell className="text-center">{api.brand}</TableCell>
-                        <TableCell>{api.listen_path}</TableCell>
-                        <TableCell className="max-w-[320px] truncate" title={api.target_url}>
-                          {api.target_url}
-                        </TableCell>
-                        <TableCell className="text-center">{api.tokenCheck}</TableCell>
-                        <TableCell className="text-center">{api.rate_limit}</TableCell>
-                        <TableCell className="text-center">
-                          <StatusDot value={api.status} />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
+      {/* Search */}
+      <Card className="dashboard-card">
+        <CardContent className="pt-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
+              placeholder="이름 / Listen Path / Target URL 검색"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Error Display */}
+      {err && (
+        <Card className="dashboard-card">
+          <CardContent className="pt-6">
+            <div className="text-center py-4 text-destructive">오류: {err}</div>
           </CardContent>
         </Card>
+      )}
 
-      </div>
-    </>
+      {/* Table */}
+      <Card className="dashboard-card">
+        <CardContent className="p-0">
+          <div className="w-full overflow-x-auto">
+            <Table className="w-full min-w-[800px]">
+              <colgroup>
+                {COLUMNS.map((c) => (
+                  <col key={c.key} style={{ minWidth: `${c.width}px` }} />
+                ))}
+              </colgroup>
+
+              <TableHeader>
+                <TableRow className="bg-muted/50 hover:bg-muted/50">
+                  {COLUMNS.map((c) => (
+                    <TableHead
+                      key={c.key}
+                      className="font-semibold text-center whitespace-nowrap h-12 sm:h-14 text-xs sm:text-sm"
+                    >
+                      {c.header}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading && <MessageRow>데이터를 불러오는 중...</MessageRow>}
+                {!loading && !err && data.length === 0 && <MessageRow>검색 결과가 없습니다.</MessageRow>}
+                {!loading &&
+                  !err &&
+                  data.map((api) => (
+                    <TableRow
+                      key={api.id}
+                      className="cursor-pointer transition-colors hover:bg-accent/50"
+                      onClick={() => handleRowClick(api)}
+                    >
+                      {COLUMNS.map((c) => {
+                        let value = api[c.key] ?? "";
+                        
+                        if (c.key === "brand") {
+                          value = <Badge variant="outline" className="bg-white text-foreground">{api[c.key]}</Badge>;
+                        }
+                        
+                        const isTextCell = typeof value === "string";
+
+                        return (
+                          <TableCell
+                            key={c.key}
+                            className={`px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm align-middle ${alignClass(c.align)}`}
+                            title={isTextCell ? value : undefined}
+                          >
+                            {isTextCell ? (
+                              <div className="truncate" style={{ maxWidth: `${c.width}px` }}>
+                                {value}
+                              </div>
+                            ) : (
+                              <div>{value}</div>
+                            )}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <ApiDetailModal open={modalOpen} onOpenChange={setModalOpen} api={selectedApi} />
+    </div>
   );
 }
