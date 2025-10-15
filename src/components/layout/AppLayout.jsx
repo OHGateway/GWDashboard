@@ -112,7 +112,7 @@ export default function AppLayout({ children }) {
             </div>
           </header>
 
-          <main className="flex flex-col gap-6 w-screen max-w-none p-6 animate-fade-in">
+          <main className="flex flex-col gap-6 w-full max-w-none p-6 animate-fade-in">
             {children}
           </main>
         </SidebarInset>
