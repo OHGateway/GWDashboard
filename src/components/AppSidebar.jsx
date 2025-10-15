@@ -123,6 +123,22 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
+        <SidebarGroup>
+          <SidebarGroupLabel>PROXY</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink to="/tyk/health-check" className={linkClass}>
+                    <HeartPulse className="mr-2 h-4 w-4" />
+                    <span>통신 상태</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
         {isAdmin && (
           <SidebarGroup>
           <SidebarGroupLabel>관리자</SidebarGroupLabel>
