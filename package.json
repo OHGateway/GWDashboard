@@ -4,7 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev:web": "vite",
+    "dev:api": "node mock-server/tyk/server.cjs",
+    "dev": "concurrently -k -n WEB,API -c green,cyan \"npm:dev:web\" \"npm:dev:api\"",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
@@ -16,6 +18,7 @@
     "@fullcalendar/interaction": "^6.1.19",
     "@fullcalendar/react": "^6.1.19",
     "@hookform/resolvers": "^3.10.0",
+    "@iconify/react": "^6.0.2",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-aspect-ratio": "^1.1.7",
@@ -47,8 +50,10 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "cors": "^2.8.5",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.6.0",
+    "express": "^5.1.0",
     "framer-motion": "^11.18.2",
     "input-otp": "^1.4.2",
     "jose": "^5.10.0",
@@ -87,6 +92,7 @@
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.38.0",
-    "vite": "^5.4.19"
+    "vite": "^5.4.19",
+    "concurrently": "^9.0.0"
   }
 }
