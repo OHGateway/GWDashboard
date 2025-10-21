@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { API_BASE_URLS } from '@/config';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
+import { MOCK_DATA } from "@/config";
 
 // 요일 헤더 인라인 스타일 적용
 function styleDayHeader(arg) {
@@ -27,6 +28,7 @@ function styleDayHeader(arg) {
 async function fetchJiraIssues(token) {
   // TODO: 실제 Jira 토큰을 안전한 방식으로 제공해야 합니다. (예: 환경 변수)
   if (!token) {
+    return MOCK_DATA.jiraTickets;
     throw new Error('Jira API 토큰이 필요합니다.');
   }
 
@@ -52,7 +54,7 @@ async function fetchJiraIssues(token) {
 export default function JiraCalendar() {
   const [selected, setSelected] = useState(null);
   // TODO: 실제 Jira API 토큰으로 교체해야 합니다.
-  const JIRA_API_TOKEN = "tsettsett"; // 예: process.env.REACT_APP_JIRA_TOKEN
+  const JIRA_API_TOKEN = null; // 예: process.env.REACT_APP_JIRA_TOKEN
 
   const { data: jiraTickets, isLoading, isError, error } = useQuery({
     queryKey: ['jiraIssues'],
