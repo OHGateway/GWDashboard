@@ -1,12 +1,13 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { format } from "date-fns";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MOCK_DATA } from "@/config";
-
-const bodyData = ``;
+import { format } from 'date-fns';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { API_BASE_URLS } from '@/config';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Loader2 } from 'lucide-react';
 
 // 요일 헤더 인라인 스타일 적용
 function styleDayHeader(arg) {
@@ -22,62 +23,68 @@ function styleDayHeader(arg) {
   if (day === 6) arg.el.style.color = '#2563eb'; // blue-600
 }
 
-// Jira API에서 이슈를 가져오는 함수 (렌더링에는 사용하지 않음)
-async function fetchJiraIssues({ jql, fields, token }) {
-  const url = 'https://company.atlassian.net/rest/api/2/search';
+// Jira API에서 이슈를 가져오는 함수
+async function fetchJiraIssues(token) {
+  // TODO: 실제 Jira 토큰을 안전한 방식으로 제공해야 합니다. (예: 환경 변수)
+  if (!token) {
+    throw new Error('Jira API 토큰이 필요합니다.');
+  }
+
+  const url = `${API_BASE_URLS.JIRA}/rest/api/2/search`;
   const res = await fetch(url, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      "expand": [
-        "names",
-        "schema",
-        "operations"
-      ],
-      "fields": [
-        "summary",
-        "status",
-        "assignee"
-      ],
-      "jql": "project = HSP",
-      "startAt": 0
+      jql: 'project = GW AND duedate is not EMPTY ORDER BY duedate DESC', // 'GW' 프로젝트의 마감일 있는 이슈 조회
+      fields: ['summary', 'status', 'description', 'STG Deploy', 'PRD Deploy','assignee', 'reporter'],
+      startAt: 0,
+      maxResults: 50,
     }),
   });
   if (!res.ok) throw new Error('Jira API 요청 실패');
-  return res.json();
+  const data = await res.json();
+  return data.issues; // 이슈 목록 반환
 }
 
 export default function JiraCalendar() {
   const [selected, setSelected] = useState(null);
+  // TODO: 실제 Jira API 토큰으로 교체해야 합니다.
+  const JIRA_API_TOKEN = "tsettsett"; // 예: process.env.REACT_APP_JIRA_TOKEN
+
+  const { data: jiraTickets, isLoading, isError, error } = useQuery({
+    queryKey: ['jiraIssues'],
+    queryFn: () => fetchJiraIssues(JIRA_API_TOKEN),
+  });
 
   // mock 데이터로 이벤트 생성
-  const events = useMemo(() =>
-    MOCK_DATA.jiraTickets.map((t) => ({
-      id: t.id,
-      title: `${t.id} · ${t.title}`,
-      start: t.duedate, // FullCalendar는 start로 인식
+  const events = useMemo(() => {
+    if (!jiraTickets) return [];
+    return jiraTickets.map((t) => ({
+      id: t.key,
+      title: `${t.key} · ${t.fields.summary}`,
+      start: t.fields.created, // 마감일 기준으로 캘린더에 표시
       extendedProps: {
-        status: t.status,
-        description: t.description,
+        key: t.key,
+        status: t.fields.status.name,
+        description: t.fields.description,
+        self: t.self,
       },
       allDay: true,
-      backgroundColor: '#2563eb',
-      borderColor: '#2563eb',
-      textColor: '#fff',
-    })),
-    []
-  );
+    }));
+  }, [jiraTickets]);
 
   // FullCalendar event click handler
   const handleEventClick = (info) => {
     setSelected({
+      key: info.event.extendedProps.key,
       title: info.event.title,
       status: info.event.extendedProps.status,
       description: info.event.extendedProps.description,
       start: info.event.start,
+      self: info.event.extendedProps.self,
     });
   };
 
@@ -89,6 +96,20 @@ export default function JiraCalendar() {
           GATEWAY Jira 캘린더
         </h2>
         <div className="bg-white rounded-xl shadow p-2 md:p-4">
+          {isLoading && (
+            <div className="flex justify-center items-center h-96">
+              <Loader2 className="h-8 w-8 animate-spin text-slate-500" />
+              <span className="ml-2 text-slate-600">Jira 이슈를 불러오는 중...</span>
+            </div>
+          )}
+          {isError && (
+            <Alert variant="destructive">
+              <AlertTitle>오류 발생</AlertTitle>
+              <AlertDescription>
+                Jira 이슈를 가져오는 데 실패했습니다: {error.message}
+              </AlertDescription>
+            </Alert>
+          )}
           <FullCalendar
             plugins={[dayGridPlugin, interactionPlugin]}
             initialView="dayGridMonth"
@@ -113,11 +134,11 @@ export default function JiraCalendar() {
             dayMaxEventRows={3}
             eventDisplay="block"
             dayHeaderClassNames={[]}
+            eventBackgroundColor="#2563eb"
+            eventBorderColor="#2563eb"
             dayHeaderDidMount={styleDayHeader}
-
           />
         </div>
-
       </div>
 
       <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
@@ -125,12 +146,22 @@ export default function JiraCalendar() {
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold">{selected?.title}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-2 text-sm">
+          <div className="space-y-3 text-sm">
+            <div><span className="font-semibold">이슈 키:</span> {selected?.key}</div>
             <div><span className="font-semibold">상태:</span> <span className={
               selected?.status === 'Done' ? 'text-green-600' : selected?.status === 'In Progress' ? 'text-yellow-600' : 'text-red-600'
             }>{selected?.status}</span></div>
-            <div><span className="font-semibold">설명:</span> {selected?.description}</div>
-            <div><span className="font-semibold">날짜:</span> {selected ? format(selected.start, 'yyyy-MM-dd') : ''}</div>
+            <div><span className="font-semibold">마감일:</span> {selected ? format(selected.start, 'yyyy-MM-dd') : ''}</div>
+            <div className="pt-1">
+              <p className="font-semibold mb-1">상세 설명:</p>
+              <p className="p-2 bg-slate-50 rounded border">{selected?.description || '설명이 없습니다.'}</p>
+            </div>
+            {selected?.self && (
+              <div>
+                <span className="font-semibold">이슈 링크:</span>
+                <a href={selected.self} target="_blank" rel="noopener noreferrer" className="ml-2 text-blue-600 hover:underline"> {selected.self}</a>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
